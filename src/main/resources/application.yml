@@ -1,0 +1,23 @@
+server:
+  port: 2023
+  error:
+    include-stacktrace: never
+
+
+jms:
+ jwt:
+  Secutiry: true
+  timezone: "Mexico"
+  issuer: "TheBetterServices.org"
+  token: 
+    auth:
+      path: "/API/oauth/clien_credential/accesstoken"
+      
+    secret: "Vez este mensaje"
+    expires-in: 1800
+  excluded:
+    path: "/API/oauth/clien_credential/autheticationcreateuser,/API/oauth/clien_credential/rsageneratekeys"
+controller:
+    localURL: "jdbc:oracle:thin:@10.22.53.62:51521:xe"
+    localusername: "system"
+    localpassword: "oracle"
