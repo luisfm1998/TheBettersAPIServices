@@ -7,22 +7,25 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.text.ParseException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 
 import TheBettersAPIServices.TheBettersAPIServices.Utilities.Validations;
 import TheBettersAPIServices.TheBettersAPIServices.Utilities.Encryption.JWE;
 import TheBettersAPIServices.TheBettersAPIServices.dto.Response;
 import TheBettersAPIServices.TheBettersAPIServices.dto.ReturnValidators;
-import TheBettersAPIServices.TheBettersAPIServices.dto.Users.SearchUsersResponse;
 import TheBettersAPIServices.TheBettersAPIServices.Utilities.DataType;
 
 @Service
@@ -40,61 +43,39 @@ public class SearchUsers {
     @Value("${controller.localpassword}")
     private String localpassword;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    ObjectMapper objectMapper = new ObjectMapper();
+
     ReturnValidators reponseValid = new ReturnValidators();
 
-    public SearchUsersResponse GetUserAuthentication(String _email) throws SQLException {
-        SearchUsersResponse _user = new SearchUsersResponse();
-        Connection conn = DriverManager.getConnection(localURL, localusername, localpassword);
-        String QueryPersons = "SELECT * FROM USUARIOS us where us.EMAIL = '" + _email + "'";
-        try (PreparedStatement preparedStatement = conn.prepareStatement(QueryPersons);) {
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                if (resultSet.next()) {
-                    _user.setNombre(resultSet.getString("NOMBRE"));
-                    _user.setPassword(resultSet.getString("PASSWORD"));
-                    _user.setidUser(resultSet.getString("IDPERSONA"));
-                    _user.setEmail(resultSet.getString("EMAIL"));
-                    _user.setIsExist(true);
-                }
-            }
-        } catch (Exception e) {
-            _user.setIsExist(false);
-        }
-        return _user;
-    }
-
     public Response CreateUserAuthetication(MultiValueMap<String, String> paramMap) throws NoSuchAlgorithmException,
-            InvalidKeySpecException, SQLException, JOSEException, ParseException, IOException {
+            InvalidKeySpecException, JOSEException, IOException {
         Response _respuesta = new Response();
         Response _adduser = new Response();
         Validations _val = new Validations();
-        boolean _UserExist = true;
         String TokenPassword = "";
         reponseValid = _val.ValidationsData(paramMap.getFirst("Email"), "Email", DataType.Type.IsMail, true);
-        reponseValid = _val.ValidationsData(paramMap.getFirst("Nombre"), "Nombre", DataType.Type.IsString, true);
-        reponseValid = _val.ValidationsData(paramMap.getFirst("ApellidoP"), "ApellidoP", DataType.Type.IsString, true);
-        reponseValid = _val.ValidationsData(paramMap.getFirst("ApellidoM"), "ApellidoM", DataType.Type.IsString, true);
+        reponseValid = _val.ValidationsData(paramMap.getFirst("Nombre"), "Nombre", DataType.Type.IsNames, true);
+        reponseValid = _val.ValidationsData(paramMap.getFirst("ApellidoP"), "ApellidoP", DataType.Type.IsNames, true);
+        reponseValid = _val.ValidationsData(paramMap.getFirst("ApellidoM"), "ApellidoM", DataType.Type.IsNames, true);
         reponseValid = _val.ValidationsData(paramMap.getFirst("Telefono"), "Telefono", DataType.Type.IsPhone, true);
-        reponseValid = _val.ValidationsData(paramMap.getFirst("Password"), "Password", DataType.Type.IsString, true);
+        reponseValid = _val.ValidationsData(paramMap.getFirst("Password"), "Password", DataType.Type.IsPassword, true);
         if (reponseValid.getErrors() == 0) {
-            _UserExist = SearchUserExist(paramMap.getFirst("Email"));
-            if (!_UserExist) {
-                TokenPassword = jwe.Encryption(paramMap.getFirst("Email"), paramMap.getFirst("Nombre"),
-                        paramMap.getFirst("ApellidoP"),
-                        paramMap.getFirst("ApellidoM"), paramMap.getFirst("Telefono"), paramMap.getFirst("Password"));
-                _adduser = AddUserAuthentication(paramMap.getFirst("Nombre"), paramMap.getFirst("ApellidoP"),
-                        paramMap.getFirst("ApellidoM"), paramMap.getFirst("Telefono"), paramMap.getFirst("Email"),
-                        TokenPassword);
-                if (_adduser.getIsOK()) {
-                    _respuesta.setIsOK(true);
-                    _respuesta.setAuthorization("Authorized");
-                    _respuesta.setMessage("User created successfully");
-                } else {
-                    _respuesta.setMessage("Can't create user");
-                }
+            TokenPassword = jwe.Encryption(paramMap);
+            _adduser = AddUserAuthentication(paramMap, TokenPassword);
+            if (_adduser.getIsOK()) {
+                _respuesta.setIsOK(true);
+                _respuesta.setAuthorization("Authorized");
+                _respuesta.setMessage("User created successfully");
+                _respuesta.setData(_adduser.getData());
+                _respuesta.setMessage(_adduser.getMessage());
             } else {
+                _respuesta.setMessage(_adduser.getMessage());
                 _respuesta.setIsOK(false);
-                _respuesta.setMessage("User exist");
             }
+
         } else {
             _respuesta.setMessage(reponseValid.getErrorDesc());
             _respuesta.setIsOK(false);
@@ -119,20 +100,60 @@ public class SearchUsers {
         return _Exist;
     }
 
-    public Response AddUserAuthentication(String Nombre, String ApellidoP, String ApellidoM, String Telefono, String Email, String Password) throws SQLException {
+    public Response AddUserAuthentication(MultiValueMap<String, String> paramMap, String _Password) {
         Response _respuesta = new Response();
-        String Query = "INSERT INTO USUARIOS(idusuario, Nombre,ApellidoP,ApellidoM,Telefono,Email,Password) values (sys_guid(),'"+ Nombre + "','" + ApellidoP + "','" + ApellidoM + "'," + Telefono + ",'" + Email + "','" + Password + "')";
-        //String Query = "INSERT INTO USUARIOS(idusuario, Nombre,ApellidoP,ApellidoM,Telefono,Email,Password) values (sys_guid(),'Diana','Martinez','Carrilo','39383212','Martineas@demo.com','sdlsd23123asd')";
-        Connection conn = DriverManager.getConnection(localURL, localusername, localpassword);
-        try (PreparedStatement preparedStatement = conn.prepareStatement(Query);) {
-            try (ResultSet resultSet = preparedStatement.executeQuery();) {
-                if (resultSet.next()) {
-                    _respuesta.setIsOK(true);
-                    _respuesta.setMessage("Is ok insert");
-                }
-            }
+        Validations _val = new Validations();
+        String JsonResponse, isok, message;
+        try {
+            SimpleJdbcCall jdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                    .withProcedureName("SP_AddUserAuthentication");
+            Map<String, Object> inParams = new HashMap<>();
+            inParams.put("Email", paramMap.getFirst("Email"));
+            inParams.put("Nombre", paramMap.getFirst("Nombre"));
+            inParams.put("ApellidoP", paramMap.getFirst("ApellidoP"));
+            inParams.put("ApellidoM", paramMap.getFirst("ApellidoM"));
+            inParams.put("Telefono", paramMap.getFirst("Telefono"));
+            inParams.put("Password", _Password);
+            Map<String, Object> result = jdbcCall.execute(inParams);
+            JsonResponse = _val.ToJson(result.get("#result-set-1"));
+            Object[] objects = objectMapper.readValue(JsonResponse, Object[].class);
+            isok = (String) ((Map<String, Object>) objects[0]).get("isok");
+            message = (String) ((Map<String, Object>) objects[0]).get("message");
+
+            _respuesta.setIsOK(Boolean.parseBoolean(isok));
+            _respuesta.setData(_val.Sql(result));
+            _respuesta.setAuthorization("Authorized");
+            _respuesta.setMessage(message);
         } catch (Exception e) {
-            _respuesta.setMessage(e.getMessage());
+            _respuesta.setAuthorization(e.getMessage());
+        }
+        return _respuesta;
+    }
+
+    public Response GetUserAuthentication(MultiValueMap<String, String> paramMap) {
+        Response _respuesta = new Response();
+        Validations _val = new Validations();
+        String email, password, isok;
+        String JsonResponse;
+        try {
+            SimpleJdbcCall jdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                    .withProcedureName("SP_AuthenticationUserLogin");
+            Map<String, Object> inParams = new HashMap<>();
+            inParams.put("Email", paramMap.getFirst("Email"));
+            inParams.put("Password", paramMap.getFirst("Password"));
+
+            Map<String, Object> result = jdbcCall.execute(inParams);
+            JsonResponse = _val.ToJson(result.get("#result-set-1"));
+            Object[] objects = objectMapper.readValue(JsonResponse, Object[].class);
+            password = (String) ((Map<String, Object>) objects[0]).get("passwords");
+            isok = (String) ((Map<String, Object>) objects[0]).get("isok");
+            email = (String) ((Map<String, Object>) objects[0]).get("email");
+
+            _respuesta.setIsOK(Boolean.parseBoolean(isok));
+            _respuesta.setMessage(password);
+            _respuesta.setAuthorization(email);
+        } catch (Exception e) {
+            _respuesta.setAuthorization(e.getMessage());
         }
         return _respuesta;
     }

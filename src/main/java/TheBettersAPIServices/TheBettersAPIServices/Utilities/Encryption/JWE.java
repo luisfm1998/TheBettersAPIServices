@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.util.MultiValueMap;
 
 import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.JOSEException;
@@ -39,32 +40,27 @@ import TheBettersAPIServices.TheBettersAPIServices.dto.Keys.KeysRSA;
 
 @Service
 public class JWE {
-    public String EncryptionJWE(String Password) throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException, ParseException, IOException {
+    public String EncryptionJWE(String Password)
+            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException, ParseException, IOException {
         GenerateDecode gs = new GenerateDecode();
-        String[] WeeCompany = { "Luis Angel", "TheBetter", "System", "Emisión" ,"Que show","Ya jaloo","Barbaro","GPI"};
 
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
 
         // Inicializa el tamaño de la clave
         keyPairGenerator.initialize(2048);
 
-
         // Generar el par de claves
         KeyPair keyPair = keyPairGenerator.genKeyPair();
-
 
         // Crear KeyFactory y especificaciones de claves RSA
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         RSAPublicKeySpec publicKeySpec = keyFactory.getKeySpec(keyPair.getPublic(), RSAPublicKeySpec.class);
         RSAPrivateKeySpec privateKeySpec = keyFactory.getKeySpec(keyPair.getPrivate(), RSAPrivateKeySpec.class);
 
-
         // Generate (and retrieve) RSA Keys from the KeyFactory using Keys Specs
-		RSAPublicKey publicRsaKey = (RSAPublicKey) keyFactory.generatePublic(publicKeySpec);
+        RSAPublicKey publicRsaKey = (RSAPublicKey) keyFactory.generatePublic(publicKeySpec);
 
-
-		RSAPrivateKey privateRsaKey = (RSAPrivateKey) keyFactory.generatePrivate(privateKeySpec);
-
+        RSAPrivateKey privateRsaKey = (RSAPrivateKey) keyFactory.generatePrivate(privateKeySpec);
 
         // Guardando llaves privadas y publicas
         var pub = keyPair.getPublic();
@@ -73,14 +69,12 @@ public class JWE {
         Base64.Encoder encoder = Base64.getEncoder();
         Base64.Decoder decoder = Base64.getDecoder();
 
-
         // Codificación de PrivateKey a Base64
         String EncoderPublicKey = encoder.encodeToString(pub.getEncoded());
         String EncoderPrivateKey = encoder.encodeToString(pvt.getEncoded());
 
-
-        //Se guardaran decodifican las llaves
-        //Private key
+        // Se guardaran decodifican las llaves
+        // Private key
         PrivateKey LlavePrivaWee = gs.getKeyPrivate();
         // Crea un nuevo RSAPrivateKeySpec con parámetros de clave adicionales
         // (LlavePrivaWee).
@@ -89,80 +83,67 @@ public class JWE {
         // (PrivadaWee).
         RSAPrivateKey PrivateKeyToken = (RSAPrivateKey) keyFactory.generatePrivate(PrivadaWee);
 
-
-
-        //Public key
+        // Public key
         PublicKey LlavePublicaWee = gs.getKeyPublic();
         // Crea un nuevo RSAPrivateKeySpec con parámetros de clave adicionales
         // (LlavePublicaWee).
         RSAPublicKeySpec PublicWee = keyFactory.getKeySpec(LlavePublicaWee, RSAPublicKeySpec.class);
         // Generar un objeto de clave privada con base en la clave proporcionada
         // (PublicWee).
-		RSAPublicKey PublicKeyfinal = (RSAPublicKey) keyFactory.generatePublic(PublicWee);
+        RSAPublicKey PublicKeyfinal = (RSAPublicKey) keyFactory.generatePublic(PublicWee);
 
-
-
-
-        // RSAPublicKeySpec publicKeySpec = keyFactory.getKeySpec(keyPair.getPublic(), RSAPublicKeySpec.class);
-
-
-
+        // RSAPublicKeySpec publicKeySpec = keyFactory.getKeySpec(keyPair.getPublic(),
+        // RSAPublicKeySpec.class);
 
         JWTClaimsSet.Builder claimsSet = new JWTClaimsSet.Builder();
-		claimsSet.issuer("test-user");
-		claimsSet.subject("JWE-Authentication-Example");
-
+        claimsSet.issuer("test-user");
+        claimsSet.subject("JWE-Authentication-Example");
 
         claimsSet.claim("appId", "Holis");
-		claimsSet.claim("userId", "4431d8dc-2f69-4057-9b83-a59385d18c03");
-		claimsSet.claim("role", "Admin");
-		claimsSet.claim("applicationType", "WEB");
-		claimsSet.claim("clientRemoteAddress", "192.168.1.2");
-		
-		claimsSet.expirationTime(new Date(new Date().getTime() + 1000 * 60 * 10));
-		claimsSet.notBeforeTime(new Date());
-		claimsSet.jwtID(UUID.randomUUID().toString());
+        claimsSet.claim("userId", "4431d8dc-2f69-4057-9b83-a59385d18c03");
+        claimsSet.claim("role", "Admin");
+        claimsSet.claim("applicationType", "WEB");
+        claimsSet.claim("clientRemoteAddress", "192.168.1.2");
 
+        claimsSet.expirationTime(new Date(new Date().getTime() + 1000 * 60 * 10));
+        claimsSet.notBeforeTime(new Date());
+        claimsSet.jwtID(UUID.randomUUID().toString());
 
         // Create the JWE header and specify:
-		// RSA-OAEP as the encryption algorithm
-		// 128-bit AES/GCM as the encryption method
-		JWEHeader header = new JWEHeader(JWEAlgorithm.RSA1_5, EncryptionMethod.A256CBC_HS512);
+        // RSA-OAEP as the encryption algorithm
+        // 128-bit AES/GCM as the encryption method
+        JWEHeader header = new JWEHeader(JWEAlgorithm.RSA1_5, EncryptionMethod.A256CBC_HS512);
 
-		// Initialized the EncryptedJWT object
-		EncryptedJWT jwt = new EncryptedJWT(header, claimsSet.build());
+        // Initialized the EncryptedJWT object
+        EncryptedJWT jwt = new EncryptedJWT(header, claimsSet.build());
 
-		// Create an RSA encrypted with the specified public RSA key
-		RSAEncrypter encrypter = new RSAEncrypter(PublicKeyfinal);
+        // Create an RSA encrypted with the specified public RSA key
+        RSAEncrypter encrypter = new RSAEncrypter(PublicKeyfinal);
 
         jwt.encrypt(encrypter);
 
+        // Token JWE
+        String jwtString = jwt.serialize();
 
-		// Token JWE
-		String jwtString = jwt.serialize();
-
-
-		jwt = EncryptedJWT.parse(jwtString);
-
-
+        jwt = EncryptedJWT.parse(jwtString);
 
         RSADecrypter decrypter = new RSADecrypter(PrivateKeyToken);
-
 
         jwt.decrypt(decrypter);
 
         String val = jwt.getJWTClaimsSet().toString();
 
-
         return Decryption(jwtString);
-    }   
-    public String Decryption(String Token) throws ParseException, InvalidKeySpecException, NoSuchAlgorithmException, IOException, JOSEException{
+    }
+
+    public String Decryption(String Token)
+            throws ParseException, InvalidKeySpecException, NoSuchAlgorithmException, IOException, JOSEException {
         EncryptedJWT jwt;
         GenerateDecode gs = new GenerateDecode();
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
 
-        //Se guardaran decodifican las llaves
-        //Private key
+        // Se guardaran decodifican las llaves
+        // Private key
         PrivateKey LlavePrivaWee = gs.getKeyPrivate();
         // Crea un nuevo RSAPrivateKeySpec con parámetros de clave adicionales
         // (LlavePrivaWee).
@@ -171,9 +152,9 @@ public class JWE {
         // (PrivadaWee).
         RSAPrivateKey PrivateKeyToken = (RSAPrivateKey) keyFactory.generatePrivate(PrivadaWee);
 
-		// In order to read back the data from the token using your private RSA key:
-		// parse the JWT text string using EncryptedJWT object
-		jwt = EncryptedJWT.parse(Token);
+        // In order to read back the data from the token using your private RSA key:
+        // parse the JWT text string using EncryptedJWT object
+        jwt = EncryptedJWT.parse(Token);
 
         RSADecrypter decrypter = new RSADecrypter(PrivateKeyToken);
 
@@ -183,28 +164,30 @@ public class JWE {
 
         return val;
     }
-    public String Encryption(String Email,String _Name,String _AP, String _AM, String _Telefono, String Password) throws JOSEException, InvalidKeySpecException, NoSuchAlgorithmException, IOException{
-        
-        String[] User = { Email, _Name, _AP, _AM ,_Telefono};     
+
+    public String Encryption(MultiValueMap<String, String> paramMap)
+            throws JOSEException, InvalidKeySpecException, NoSuchAlgorithmException, IOException {
+        String[] User = { paramMap.getFirst("Email"), paramMap.getFirst("Nombre"), paramMap.getFirst("ApellidoP"),
+                paramMap.getFirst("ApellidoM"), paramMap.getFirst("Telefono") };
         GenerateDecode _decode = new GenerateDecode();
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
 
-        //Obtención de Public key
+        // Obtención de Public key
         PublicKey LlavePublicaWee = _decode.getKeyPublic();
         // Crea un nuevo RSAPrivateKeySpec con parámetros de clave adicionales
         RSAPublicKeySpec PublicWee = keyFactory.getKeySpec(LlavePublicaWee, RSAPublicKeySpec.class);
         // Generar un objeto de clave privada con base en la clave proporcionada
-		RSAPublicKey PublicKeyfinal = (RSAPublicKey) keyFactory.generatePublic(PublicWee);
-             
-       
-        JWTClaimsSet.Builder claimsSet = new JWTClaimsSet.Builder();
-		claimsSet.issuer("The-Better");
-		claimsSet.subject("AuthenticationPassword");
-        claimsSet.claim("User", User);
-        claimsSet.claim("Password", Password);
-		claimsSet.jwtID(UUID.randomUUID().toString());
+        RSAPublicKey PublicKeyfinal = (RSAPublicKey) keyFactory.generatePublic(PublicWee);
 
-        // Crea el encabezado JWE y especifica: RSA-OAEP como algoritmo de cifrado, A256CBC_HS512 como método de cifrado
+        JWTClaimsSet.Builder claimsSet = new JWTClaimsSet.Builder();
+        claimsSet.issuer("The-Better");
+        claimsSet.subject("AuthenticationPassword");
+        claimsSet.claim("User", User);
+        claimsSet.claim("Password", paramMap.getFirst("Password"));
+        claimsSet.jwtID(UUID.randomUUID().toString());
+
+        // Crea el encabezado JWE y especifica: RSA-OAEP como algoritmo de cifrado,
+        // A256CBC_HS512 como método de cifrado
         JWEHeader header = new JWEHeader(JWEAlgorithm.RSA1_5, EncryptionMethod.A256CBC_HS512);
 
         // Inicializó el objeto EncryptedJWT
@@ -217,11 +200,12 @@ public class JWE {
         jwt.encrypt(encrypter);
 
         // Token JWE
-		String jwtString = jwt.serialize();
+        String jwtString = jwt.serialize();
 
         return jwtString;
     }
-    public Response GenerateRSAKeys() throws NoSuchAlgorithmException, InvalidKeySpecException{
+
+    public Response GenerateRSAKeys() throws NoSuchAlgorithmException, InvalidKeySpecException {
         Response _respuesta = new Response();
         KeysRSA _Key = new KeysRSA();
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
@@ -236,24 +220,23 @@ public class JWE {
             // Guardando llaves privadas y publicas
             var pub = keyPair.getPublic();
             var pvt = keyPair.getPrivate();
-    
+
             Base64.Encoder encoder = Base64.getEncoder();
-    
+
             // Codificación de PrivateKey a Base64
             String EncoderPublicKey = encoder.encodeToString(pub.getEncoded());
             String EncoderPrivateKey = encoder.encodeToString(pvt.getEncoded());
-    
-            _Key.setPublicKey("-----BEGIN PUBLIC KEY-----"+EncoderPublicKey+"-----END PUBLIC KEY-----");
-            _Key.setPrivateKey("-----BEGIN PRIVATE KEY-----"+EncoderPrivateKey+"-----END PRIVATE KEY-----");
-    
+
+            _Key.setPublicKey("-----BEGIN PUBLIC KEY-----" + EncoderPublicKey + "-----END PUBLIC KEY-----");
+            _Key.setPrivateKey("-----BEGIN PRIVATE KEY-----" + EncoderPrivateKey + "-----END PRIVATE KEY-----");
+
             _respuesta.setAuthorization("Authorized");
             _respuesta.setIsOK(true);
             _respuesta.setMessage("Succes");
-            _respuesta.setData(_Key); 
+            _respuesta.setData(_Key);
         } catch (Exception e) {
             _respuesta.setMessage(e.getMessage());
         }
         return _respuesta;
     }
 }
-

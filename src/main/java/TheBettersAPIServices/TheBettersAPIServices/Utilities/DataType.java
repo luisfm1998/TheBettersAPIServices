@@ -14,7 +14,8 @@ public class DataType {
         IsPhone,
         IsHeadersString,
         IsBodyString,
-        IsBodyNumber
+        IsBodyNumber,
+        IsNames
     }
 
     public Boolean ValidDatatype(String ValVariable,Type _Datatype) {
@@ -53,6 +54,9 @@ public class DataType {
             case IsPhone:
                 IsValid = IsPhone(ValVariable) ? true : false;
                 break; 
+            case IsNames:
+                IsValid = IsNames(ValVariable) ? true : false;
+                break; 
             default:
                 IsValid = false;
                 break;
@@ -76,11 +80,10 @@ public class DataType {
     public boolean IsPassword(String expression) /* Unicamente s edebe usar para validar campos de contraseña */
     {
         boolean isValid = false;
-        if (!isEmpty(expression))
+        if (isEmpty(expression))
         {
-            String regex = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$";
+            String regex = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,16}$";
             isValid = expression.matches(regex);
-
         }
         return isValid;
     }
@@ -123,6 +126,17 @@ public class DataType {
         if (isEmpty(expression))
         {
             String regex = "^[a-zA-Z0-9]+$";
+            isValid = expression.matches(regex);
+
+        }
+        return isValid;
+    }
+    public boolean IsNames(String expression) /* Unicamente s edebe usar para validar campos de contraseña */
+    {
+        boolean isValid = false;
+        if (isEmpty(expression))
+        {
+            String regex = "^[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+$";
             isValid = expression.matches(regex);
 
         }

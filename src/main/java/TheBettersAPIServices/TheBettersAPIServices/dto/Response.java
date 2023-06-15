@@ -1,7 +1,5 @@
 package TheBettersAPIServices.TheBettersAPIServices.dto;
 
-import java.util.ArrayList;
-
 public class Response {
     private Object Data;
     private boolean isOK = false;
