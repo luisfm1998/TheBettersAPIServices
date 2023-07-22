@@ -8,7 +8,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -75,7 +74,7 @@ public class SearchUsers {
                 _respuesta.setMessage(_adduser.getMessage());
                 _respuesta.setIsOK(false);
             }
-
+            _respuesta = _adduser;
         } else {
             _respuesta.setMessage(reponseValid.getErrorDesc());
             _respuesta.setIsOK(false);
@@ -109,21 +108,21 @@ public class SearchUsers {
                     .withProcedureName("SP_AddUserAuthentication");
             Map<String, Object> inParams = new HashMap<>();
             inParams.put("Email", paramMap.getFirst("Email"));
+            inParams.put("Password", _Password);
             inParams.put("Nombre", paramMap.getFirst("Nombre"));
             inParams.put("ApellidoP", paramMap.getFirst("ApellidoP"));
             inParams.put("ApellidoM", paramMap.getFirst("ApellidoM"));
             inParams.put("Telefono", paramMap.getFirst("Telefono"));
-            inParams.put("Password", _Password);
             Map<String, Object> result = jdbcCall.execute(inParams);
             JsonResponse = _val.ToJson(result.get("#result-set-1"));
+            String dato = result.get("#result-set-1").getClass().getSimpleName();
             Object[] objects = objectMapper.readValue(JsonResponse, Object[].class);
-            isok = (String) ((Map<String, Object>) objects[0]).get("isok");
-            message = (String) ((Map<String, Object>) objects[0]).get("message");
-
+            isok = (String) ((Map<String, Object>) objects[0]).get("Isok");
+            message = (String) ((Map<String, Object>) objects[0]).get("Mensaje");
             _respuesta.setIsOK(Boolean.parseBoolean(isok));
             _respuesta.setData(_val.Sql(result));
             _respuesta.setAuthorization("Authorized");
-            _respuesta.setMessage(message);
+            _respuesta.setMessage(dato);
         } catch (Exception e) {
             _respuesta.setAuthorization(e.getMessage());
         }
@@ -145,9 +144,9 @@ public class SearchUsers {
             Map<String, Object> result = jdbcCall.execute(inParams);
             JsonResponse = _val.ToJson(result.get("#result-set-1"));
             Object[] objects = objectMapper.readValue(JsonResponse, Object[].class);
-            password = (String) ((Map<String, Object>) objects[0]).get("passwords");
-            isok = (String) ((Map<String, Object>) objects[0]).get("isok");
-            email = (String) ((Map<String, Object>) objects[0]).get("email");
+            password = (String) ((Map<String, Object>) objects[0]).get("password");
+            isok = (String) ((Map<String, Object>) objects[0]).get("Isok");
+            email = (String) ((Map<String, Object>) objects[0]).get("correo");
 
             _respuesta.setIsOK(Boolean.parseBoolean(isok));
             _respuesta.setMessage(password);

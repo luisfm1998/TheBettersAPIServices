@@ -8,9 +8,9 @@
 		<version>3.0.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>TheBettersAPIServices</groupId>
-	<artifactId>TheBettersAPIServices</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<groupId>TheBettersAPI</groupId>
+	<artifactId>TheBettersAPI</artifactId>
+	<version>1</version>
 	<name>TheBettersAPIServices</name>
 	<description>Project for  services integrations of the betters</description>
 	<properties>
@@ -68,7 +68,7 @@
 			<artifactId>json</artifactId>
 			<version>20201115</version>
 		</dependency>
-				<dependency>
+		<dependency>
 			<groupId>com.microsoft.sqlserver</groupId>
 			<artifactId>mssql-jdbc</artifactId>
 			<version>8.2.2.jre8</version>

@@ -16,7 +16,7 @@ jms:
     secret: "Vez este mensaje"
     expires-in: 1800
   excluded:
-    path: "/API/oauth/clien_credential/autheticationcreateuser,/API/oauth/clien_credential/rsageneratekeys,/API/oauth/clien_credential/pagos"
+    path: "/API/oauth/clien_credential/autheticationcreateuser,/API/oauth/clien_credential/rsageneratekeys,/API/Productos/getproductoscat"
 controller:
     localURL: "jdbc:oracle:thin:@10.22.53.62:51521:xe"
     localusername: "system"
@@ -25,6 +25,6 @@ controller:
 spring:
   datasource:
     driver-class-name: "com.microsoft.sqlserver.jdbc.SQLServerDriver"
-    url: "jdbc:sqlserver://localhost:1433;databaseName=devBetters"
+    url: "jdbc:sqlserver://localhost:1433;databaseName=devServices"
     username: "SA"
     password: "$Isis.demo01"

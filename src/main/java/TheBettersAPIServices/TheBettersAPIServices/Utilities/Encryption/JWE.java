@@ -1,9 +1,6 @@
 package TheBettersAPIServices.TheBettersAPIServices.Utilities.Encryption;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -13,19 +10,14 @@ import java.security.PublicKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
-
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
-
 import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEAlgorithm;

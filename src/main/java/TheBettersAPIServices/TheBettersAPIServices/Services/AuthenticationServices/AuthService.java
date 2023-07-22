@@ -17,7 +17,6 @@ import TheBettersAPIServices.TheBettersAPIServices.Utilities.Encryption.JWE;
 import TheBettersAPIServices.TheBettersAPIServices.dto.JwtResponse;
 import TheBettersAPIServices.TheBettersAPIServices.dto.Response;
 import TheBettersAPIServices.TheBettersAPIServices.dto.ReturnValidators;
-import TheBettersAPIServices.TheBettersAPIServices.dto.Users.SearchUsersResponse;
 import TheBettersAPIServices.TheBettersAPIServices.Utilities.DataType;
 import org.json.JSONObject;
 
